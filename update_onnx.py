@@ -55,7 +55,9 @@ def update_onnx(src_model_file, dst_model_file, batch_input=True,
             inputs=[new_input_name],
             outputs=[new_input_name+'_b', new_input_name+'_g', new_input_name+'_r']
         )
-        model.graph.node.append(new_node)
+        # 用append, 节点会被加在graph的最后，用onnxruntime推断没问题，但用 onnx.checker.check_model 会出现 “ValidationError: Nodes in a graph must be topologically sorted,...” 的错误。
+        #model.graph.node.append(new_node)
+        model.graph.node.insert(0,new_node)
         new_node = onnx.helper.make_node(
             'Concat',
             name=new_input_name+'_concat',
@@ -63,7 +65,8 @@ def update_onnx(src_model_file, dst_model_file, batch_input=True,
             inputs=[new_input_name+'_r', new_input_name+'_g', new_input_name+'_b'],
             outputs=[new_input_name+'_rgb']
         )
-        model.graph.node.append(new_node)
+        #model.graph.node.append(new_node)
+        model.graph.node.insert(1,new_node)
 
     onnx.save(model, dst_model_file)
 
